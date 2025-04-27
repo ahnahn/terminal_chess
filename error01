@@ -1,0 +1,21 @@
+
+  a b c d e f g h
+8 r n b . k b n r 8
+7 p p p . p p p p 7
+6 . . . . . . . . 6
+5 . . . . q . . . 5
+4 P . . . . . . . 4
+3 . . . . . . . . 3
+2 . P P P . P P P 2
+1 R N B Q K B N R 1
+  a b c d e f g h
+Your move: e1e2
+Invalid move. Try again.
+Your move: d1e2
+Invalid move. Try again.
+Your move: d1e2
+Invalid move. Try again.
+Your move: d1w2
+Invalid input format. Use e2e4, etc.
+Your move: d1e2
+Invalid move. Try again.
