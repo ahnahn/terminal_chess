@@ -239,6 +239,8 @@ game_end:
 }
 
 int main() {
+    install_and_setup_ngrok();
+
     int server_sock;
     struct sockaddr_in serv_addr;
     printf("Starting Chess server on port %d...\n", PORT);
