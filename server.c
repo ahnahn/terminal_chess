@@ -16,92 +16,6 @@ GameState game;         /* Shared game state */
 pthread_mutex_t game_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t turn_cond = PTHREAD_COND_INITIALIZER;
 
-####################################################################################################
-#include <sys/stat.h>
-#include <curl/curl.h>
-
-struct MemoryStruct {
-    char *memory;
-    size_t size;
-};
-
-// ngrok API 응답 수신용 콜백
-static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp) {
-    size_t realsize = size * nmemb;
-    struct MemoryStruct *mem = (struct MemoryStruct *)userp;
-
-    char *ptr = realloc(mem->memory, mem->size + realsize + 1);
-    if (!ptr) return 0;
-    mem->memory = ptr;
-    memcpy(&(mem->memory[mem->size]), contents, realsize);
-    mem->size += realsize;
-    mem->memory[mem->size] = 0;
-    return realsize;
-}
-
-void install_and_setup_ngrok() {
-    struct stat st;
-    if (stat("ngrok", &st) != 0) {
-        printf("ngrok not found. Downloading...\n");
-        system("wget https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-stable-linux-amd64.zip -O ngrok.zip");
-        system("unzip ngrok.zip");
-        system("rm ngrok.zip");
-    } else {
-        printf("ngrok is already installed.\n");
-    }
-
-    char token[256];
-    printf("Enter your ngrok authtoken: ");
-    fflush(stdout);
-    if (fgets(token, sizeof(token), stdin) == NULL) {
-        fprintf(stderr, "Failed to read authtoken.\n");
-        exit(1);
-    }
-    token[strcspn(token, "\r\n")] = '\0';
-
-    char cmd[512];
-    snprintf(cmd, sizeof(cmd), "./ngrok config add-authtoken %s", token);
-    printf("Configuring ngrok...\n");
-    system(cmd);
-
-    printf("Starting ngrok TCP tunnel on port 5000...\n");
-    system("nohup ./ngrok tcp 5000 > ngrok.log 2>&1 &");
-
-    // ngrok API 주소에서 외부 접속 주소 가져오기
-    printf("Waiting for ngrok tunnel to be ready...\n");
-    sleep(3); // ngrok이 포트 열 시간
-
-    CURL *curl;
-    CURLcode res;
-    struct MemoryStruct chunk = { malloc(1), 0 };
-
-    curl_global_init(CURL_GLOBAL_DEFAULT);
-    curl = curl_easy_init();
-    if (curl) {
-        curl_easy_setopt(curl, CURLOPT_URL, "http://127.0.0.1:4040/api/tunnels");
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
-        res = curl_easy_perform(curl);
-        if (res == CURLE_OK) {
-            char *p = strstr(chunk.memory, "tcp://");
-            if (p) {
-                char address[128] = {0};
-                sscanf(p, "tcp://%127[^\"]", address);
-                printf("Your public TCP address: tcp://%s\n", address);
-            } else {
-                printf("Could not extract ngrok TCP address.\n");
-            }
-        } else {
-            fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
-        }
-        curl_easy_cleanup(curl);
-    }
-    curl_global_cleanup();
-    free(chunk.memory);
-}
-#####################################################################################################
-
-
 /* Thread data */
 typedef struct {
     int color;         /* 0 for White, 1 for Black */
@@ -239,8 +153,6 @@ game_end:
 }
 
 int main() {
-    install_and_setup_ngrok();
-
     int server_sock;
     struct sockaddr_in serv_addr;
     printf("Starting Chess server on port %d...\n", PORT);
