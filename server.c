@@ -5,6 +5,8 @@
 #include <pthread.h>
 #include <netinet/in.h>
 #include "chess.h"
+#include <locale.h>
+
 
 #define PORT 5000
 #define BUF_SIZE 256
@@ -24,35 +26,55 @@ typedef struct {
 void send_msg(int sock, const char *msg) {
     send(sock, msg, strlen(msg), 0);
 }
-
-/* Broadcast the current board to both clients */
-void broadcast_board() {
-    char buf[BUF_SIZE];
-    snprintf(buf, sizeof(buf), "\n  a b c d e f g h\n");
+static void broadcast_line(const char *line) {
     for (int i = 0; i < 2; i++) {
-        send(client_sock[i], buf, strlen(buf), 0);
+        send(client_sock[i], line, strlen(line), 0);
     }
+}
+
+void broadcast_board() {
+    setlocale(LC_ALL, "");
+
+    // 파일 헤더 (열 이름) — 공백 3칸
+    broadcast_line("   a   b   c   d   e   f   g   h\n");
+    broadcast_line("  ╔═══╦═══╦═══╦═══╦═══╦═══╦═══╦═══╗\n");
 
     for (int r = 0; r < BOARD_SIZE; r++) {
-        snprintf(buf, sizeof(buf), "%d ", BOARD_SIZE - r);
+        char line[BUF_SIZE] = {0};
+        int off = snprintf(line, sizeof(line), " %d ║", BOARD_SIZE - r);
+
         for (int c = 0; c < BOARD_SIZE; c++) {
-            char piece[4];
-            snprintf(piece, sizeof(piece), "%c ", game.board[r][c]);
-            strncat(buf, piece, sizeof(buf) - strlen(buf) - 1);
+            char pc = game.board[r][c];
+            const char *sym = " ";
+            switch (pc) {
+                case 'K': sym = "♔"; break;
+                case 'Q': sym = "♕"; break;
+                case 'R': sym = "♖"; break;
+                case 'B': sym = "♗"; break;
+                case 'N': sym = "♘"; break;
+                case 'P': sym = "♙"; break;
+                case 'k': sym = "♚"; break;
+                case 'q': sym = "♛"; break;
+                case 'r': sym = "♜"; break;
+                case 'b': sym = "♝"; break;
+                case 'n': sym = "♞"; break;
+                case 'p': sym = "♟"; break;
+                default: sym = " "; break;
+            }
+            off += snprintf(line + off, sizeof(line) - off, " %s ║", sym);
         }
-        char endline[16];
-        snprintf(endline, sizeof(endline), "%d\n", BOARD_SIZE - r);
-        strncat(buf, endline, sizeof(buf) - strlen(buf) - 1);
 
-        for (int i = 0; i < 2; i++) {
-            send(client_sock[i], buf, strlen(buf), 0);
-        }
+        off += snprintf(line + off, sizeof(line) - off, " %d\n", BOARD_SIZE - r);
+        broadcast_line(line);
+
+        if (r < BOARD_SIZE - 1)
+            broadcast_line("   ╠═══╬═══╬═══╬═══╬═══╬═══╬═══╬═══╣\n");
+        else
+            broadcast_line("   ╚═══╩═══╩═══╩═══╩═══╩═══╩═══╩═══╝\n");
     }
 
-    snprintf(buf, sizeof(buf), "  a b c d e f g h\n");
-    for (int i = 0; i < 2; i++) {
-        send(client_sock[i], buf, strlen(buf), 0);
-    }
+    // 파일 푸터 (열 이름) — 공백 3칸
+    broadcast_line("   a   b   c   d   e   f   g   h\n");
 }
 
 /* Handle a client (White or Black) */
@@ -116,7 +138,7 @@ void *client_thread(void *arg) {
         }
 
         /* Prompt for move */
-        send_msg(client_sock[me], "Your move: ");
+        send_msg(client_sock[me], "Your move: \n");
         pthread_mutex_unlock(&game_mutex);
 
         /* Read move from client */
