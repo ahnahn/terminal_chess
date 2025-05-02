@@ -33,19 +33,47 @@ void init_board(GameState *game) {
             game->board[r][c] = '.';
 }
 
-/* Print the board (with ranks/files) */
+/* Print the board with Unicode borders and pieces */
+#include <locale.h>
 void print_board(const GameState *game) {
-    printf("  a b c d e f g h\n");
+    setlocale(LC_ALL, "");
+    // Files header
+    printf("  a   b   c   d   e   f   g   h\n");
+    // Top border
+    printf("╔═══╦═══╦═══╦═══╦═══╦═══╦═══╦═══╗\n");
     for(int r = 0; r < BOARD_SIZE; r++) {
-        printf("%d ", BOARD_SIZE - r);
+        // Rank and left border
+        printf("%d ║", BOARD_SIZE - r);
         for(int c = 0; c < BOARD_SIZE; c++) {
             char pc = game->board[r][c];
-            printf("%c ", pc);
+            const char *sym = " ";
+            switch(pc) {
+                case 'K': sym = "♔"; break;
+                case 'Q': sym = "♕"; break;
+                case 'R': sym = "♖"; break;
+                case 'B': sym = "♗"; break;
+                case 'N': sym = "♘"; break;
+                case 'P': sym = "♙"; break;
+                case 'k': sym = "♚"; break;
+                case 'q': sym = "♛"; break;
+                case 'r': sym = "♜"; break;
+                case 'b': sym = "♝"; break;
+                case 'n': sym = "♞"; break;
+                case 'p': sym = "♟"; break;
+            }
+            printf(" %s ║", sym);
         }
-        printf("%d\n", BOARD_SIZE - r);
+        printf(" %d\n", BOARD_SIZE - r);
+        // Middle or bottom border
+        if(r < BOARD_SIZE - 1)
+            printf("╠═══╬═══╬═══╬═══╬═══╬═══╬═══╬═══╣\n");
+        else
+            printf("╚═══╩═══╩═══╩═══╩═══╩═══╩═══╩═══╝\n");
     }
-    printf("  a b c d e f g h\n");
+    // Files footer
+    printf("  a   b   c   d   e   f   g   h\n");
 }
+
 
 /* Convert algebraic notation to array indices */
 int parse_move(const char *move, int *src_row, int *src_col, int *dst_row, int *dst_col) {
