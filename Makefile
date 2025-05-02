@@ -17,3 +17,4 @@ clean:
 
 
 #gcc server.c -o server -lcurl -lpthread
+#sudo apt-get install libcurl4-openssl-dev
