@@ -36,7 +36,7 @@ void broadcast_board() {
     setlocale(LC_ALL, "");
 
     // 파일 헤더 (열 이름) — 공백 3칸
-    broadcast_line("      a   b   c   d   e   f   g   h\n");
+    broadcast_line("     a   b   c   d   e   f   g   h\n");
     broadcast_line("   ╔═══╦═══╦═══╦═══╦═══╦═══╦═══╦═══╗\n");
 
     for (int r = 0; r < BOARD_SIZE; r++) {
@@ -74,7 +74,7 @@ void broadcast_board() {
     }
 
     // 파일 푸터 (열 이름) — 공백 3칸
-    broadcast_line("      a   b   c   d   e   f   g   h\n");
+    broadcast_line("     a   b   c   d   e   f   g   h\n");
 }
 
 /* Handle a client (White or Black) */
