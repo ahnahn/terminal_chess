@@ -1,4 +1,3 @@
-/* server.c: Chess server handling two clients over TCP */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -152,6 +151,26 @@ game_end:
     return NULL;
 }
 
+/* Function to run serveo or localhost.run */
+void start_reverse_tunnel() {
+    printf("Starting reverse tunnel via serveo.net...\n");
+    // 비대화형, 백그라운드 실행
+    const char *cmd =
+      "ssh -o StrictHostKeyChecking=no "
+      "-o UserKnownHostsFile=/dev/null "
+      "-N "
+      "-R 0:localhost:5000 "
+      "serveo.net &";
+    int rc = system(cmd);
+    if (rc != 0) {
+        fprintf(stderr, "Failed to establish reverse tunnel (rc=%d).\n", rc);
+        exit(1);
+    }
+    sleep(2);  // 터널 안정화 잠깐 대기
+    printf("Reverse tunnel launched in background.\n");
+}
+
+
 int main() {
     int server_sock;
     struct sockaddr_in serv_addr;
@@ -159,6 +178,9 @@ int main() {
 
     /* Initialize game */
     init_board(&game);
+
+    /* Run reverse SSH tunnel for public access */
+    start_reverse_tunnel();
 
     /* Setup TCP socket */
     if ((server_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
