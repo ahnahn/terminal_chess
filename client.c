@@ -7,10 +7,15 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <locale.h>
+
 
 #define BUF_SIZE 256
 
 int main(int argc, char *argv[]) {
+
+    setlocale(LC_ALL, "");
+    
     if (argc != 3) {
         fprintf(stderr, "Usage: %s <server-hostname> <port>\n", argv[0]);
         exit(1);
