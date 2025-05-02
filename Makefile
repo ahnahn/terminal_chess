@@ -13,3 +13,7 @@ client: client.c
 
 clean:
 	rm -f server client
+
+
+
+#gcc server.c -o server -lcurl -lpthread
